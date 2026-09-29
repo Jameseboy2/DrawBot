@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ArduinoSettingsState">
+    <option name="arduinoCliPath" value="$USER_HOME$/.local/bin/arduino-cli" />
+    <option name="comPort" value="ttyS4" />
+    <option name="boardTarget" value="uno" />
+    <option name="serialPort" value="ttyS4" />
+    <option name="enableAi" value="false" />
+    <option name="aiBackend" value="antigravity" />
+  </component>
+</project>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CLionExternalBuildManager">
+    <target id="e6b2ac67-e510-47d3-8cb5-0470939f4a80" name="Arduino Uno" defaultType="TOOL">
+      <configuration id="eb704517-d4f8-4e72-971b-67945789b6ec" name="Arduino Uno">
+        <build type="TOOL">
+          <tool actionId="Tool_External Tools_Arduino CLI" />
+        </build>
+      </configuration>
+    </target>
+  </component>
+</project>

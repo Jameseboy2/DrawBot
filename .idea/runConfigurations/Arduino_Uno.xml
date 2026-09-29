@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Arduino Uno" type="CLionExternalRunConfiguration" factoryName="Application" PROGRAM_PARAMS="upload -p /dev/ttyACM0 --fqbn arduino:avr:uno" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" WORKING_DIR="file://$ContentRoot$" PASS_PARENT_ENVS_2="true" PROJECT_NAME="DrawBot" TARGET_NAME="Arduino Uno" CONFIG_NAME="Arduino Uno" RUN_PATH="$USER_HOME$/.local/bin/arduino-cli">
+    <method v="2">
+      <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+    </method>
+  </configuration>
+</component>
