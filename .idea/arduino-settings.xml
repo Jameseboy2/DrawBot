@@ -7,5 +7,6 @@
     <option name="serialPort" value="ttyS4" />
     <option name="enableAi" value="false" />
     <option name="aiBackend" value="antigravity" />
+    <option name="activeBackend" value="arduino-cli" />
   </component>
 </project>
