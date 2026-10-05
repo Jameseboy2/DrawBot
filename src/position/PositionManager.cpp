@@ -18,7 +18,7 @@ void PositionManager::draw_straight_vector(const Point p1, const Point p2) {
 
     const int segment_count = max(1, static_cast<int>(ceil(distance / SEGMENT_LENGTH_MM)));
 
-    for (int i = 0; i < segment_count; i++) {
+    for (int i = 0; i <= segment_count; i++) {
         const float fraction_moved = static_cast<float>(i) / segment_count;
         const float target_x = p1.x + fraction_moved * dx;
         const float target_y = p1.y + fraction_moved * dy;
