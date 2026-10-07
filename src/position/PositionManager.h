@@ -30,8 +30,8 @@ private:
 
 
     static constexpr float BOARD_WIDTH_MM = 1500.0; // TODO: Find correct value
-    static constexpr float SPOOL_DIAMETER_MM = 20.0; // TODO: Find correct value
-    static constexpr float STEPS_PER_REVOLUTION = 400.0; // TODO: Find correct value
+    static constexpr float SPOOL_DIAMETER_MM = 10.0;
+    static constexpr float STEPS_PER_REVOLUTION = 1600.0;
     // TODO: Find good value, or maybe get the robot to figure out its position automatically?
     static constexpr float START_X_MM = 300.0;
     // TODO: Find good value, or maybe get the robot to figure out its position automatically?
