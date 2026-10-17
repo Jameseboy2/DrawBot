@@ -3,7 +3,7 @@
     <exec>
       <option name="COMMAND" value="$USER_HOME$/.local/bin/arduino-cli" />
       <option name="PARAMETERS" value="compile --fqbn arduino:avr:uno" />
-      <option name="WORKING_DIRECTORY" value="$ProjectFileDir$" />
+      <option name="WORKING_DIRECTORY" value="$USER_HOME$/CLionProjects/DrawBot/DrawBot" />
     </exec>
   </tool>
 </toolSet>
