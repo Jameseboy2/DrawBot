@@ -1,9 +1,9 @@
 pub mod app_state;
 pub mod routes;
 
-use crate::app_state::AppState;
+use crate::app_state::{AppState, BotStatus};
 use axum::Router;
-use axum::extract::Request;
+use axum::extract::{Request, State};
 use axum::routing::any;
 use std::net::SocketAddr;
 use std::sync::Arc;
