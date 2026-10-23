@@ -52,7 +52,15 @@ pub async fn handle(
             StatusCode::NO_CONTENT.into_response()
         }
         StatusArg::AwaitingReset => {
-            app_state.set_bot_status(BotStatus::AwaitingReset).await;
+            // In theory, this should never be called when there's a pending job, but let's handle
+            // it smoothly just in case it does happen.
+            if app_state.has_pending_job().await {
+                app_state
+                    .set_bot_status(BotStatus::AwaitingResetWithJobPending)
+                    .await;
+            } else {
+                app_state.set_bot_status(BotStatus::AwaitingReset).await;
+            }
             StatusCode::OK.into_response()
         }
     }

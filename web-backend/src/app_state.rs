@@ -38,6 +38,10 @@ impl AppState {
         *self.bot_status.lock().await
     }
 
+    pub async fn has_pending_job(&self) -> bool {
+        self.pending_job.lock().await.is_some()
+    }
+
     pub async fn take_pending_job(&self) -> Option<PendingJob> {
         self.pending_job.lock().await.take()
     }
