@@ -6,11 +6,16 @@ use axum::response::IntoResponse;
 use axum_extra::TypedHeader;
 use futures_util::SinkExt;
 use futures_util::StreamExt;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tracing::Instrument;
+
+#[derive(Deserialize)]
+enum IncomingMessage {
+    CancelPendingJob,
+}
 
 #[derive(Serialize)]
 enum OutgoingMessage {
@@ -36,8 +41,8 @@ pub async fn handle(
         async move {
             tracing::info!("Opening websocket for {addr}.");
 
-            if let Err(error) = handle_socket(socket, app_state).await {
-                tracing::error!("Aborted websocket with error: {}", error);
+            if let Err(reason) = handle_socket(socket, app_state).await {
+                tracing::info!("Aborted websocket with reason: {}", reason);
             }
 
             tracing::info!("Closed websocket for {addr}.");
@@ -47,9 +52,9 @@ pub async fn handle(
 }
 
 async fn handle_socket(socket: WebSocket, app_state: Arc<AppState>) -> Result<(), Box<dyn Error>> {
-    let (raw_sender, mut raw_receiver) = socket.split();
+    let (raw_sender, raw_receiver) = socket.split();
     let mut sender = AppSender::new(raw_sender);
-    // let mut receiver = AppReceiver::new(raw_receiver);
+    let mut receiver = AppReceiver::new(raw_receiver);
 
     let mut rx_bot_status = app_state.tx_bot_status.subscribe();
 
@@ -66,15 +71,13 @@ async fn handle_socket(socket: WebSocket, app_state: Arc<AppState>) -> Result<()
                 sender.send(OutgoingMessage::UpdateBotStatus(bot_status)).await?;
             },
 
-            Some(message) = raw_receiver.next() => {
-                if let Message::Close(_) = message? {
-                    break;
+            Some(message) = receiver.next() => {
+                match message? {
+                    IncomingMessage::CancelPendingJob => app_state.cancel_pending_job().await,
                 }
             }
         }
     }
-
-    Ok(())
 }
 
 struct AppSender {
@@ -96,30 +99,31 @@ impl AppSender {
     }
 }
 
-// struct AppReceiver {
-//     inner: futures_util::stream::SplitStream<WebSocket>,
-// }
-//
-// impl AppReceiver {
-//     fn new(inner: futures_util::stream::SplitStream<WebSocket>) -> Self {
-//         Self { inner }
-//     }
-//
-//     pub async fn next(&mut self) -> Option<Result<IncomingMessage, String>> {
-//         if let Some(result) = self.inner.next().await {
-//             match result {
-//                 Ok(Message::Text(text)) => match serde_json::from_str::<IncomingMessage>(&text) {
-//                     Ok(cmd) => Some(Ok(cmd)),
-//                     Err(err) => Some(Err(format!("Invalid JSON: {err}"))),
-//                 },
-//                 Err(e) => Some(Err(e.to_string())),
-//                 Ok(message) => {
-//                     tracing::warn!("Ignoring non-text websocket message: {message:?}");
-//                     None
-//                 }
-//             }
-//         } else {
-//             None
-//         }
-//     }
-// }
+struct AppReceiver {
+    inner: futures_util::stream::SplitStream<WebSocket>,
+}
+
+impl AppReceiver {
+    fn new(inner: futures_util::stream::SplitStream<WebSocket>) -> Self {
+        Self { inner }
+    }
+
+    pub async fn next(&mut self) -> Option<Result<IncomingMessage, String>> {
+        if let Some(result) = self.inner.next().await {
+            match result {
+                Ok(Message::Text(text)) => match serde_json::from_str::<IncomingMessage>(&text) {
+                    Ok(cmd) => Some(Ok(cmd)),
+                    Err(err) => Some(Err(format!("Invalid JSON: {err}"))),
+                },
+                Err(e) => Some(Err(e.to_string())),
+                Ok(Message::Close(_)) => Some(Err("Client closed the connection".into())),
+                Ok(message) => {
+                    tracing::warn!("Ignoring non-text websocket message: {message:?}");
+                    None
+                }
+            }
+        } else {
+            None
+        }
+    }
+}

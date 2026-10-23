@@ -1,13 +1,15 @@
 pub mod app_state;
 pub mod routes;
 
-use crate::app_state::{AppState, BotStatus};
+use crate::app_state::AppState;
 use axum::Router;
-use axum::extract::{Request, State};
-use axum::routing::any;
+use axum::extract::Request;
+use axum::routing::{any, post};
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::net::TcpListener;
+use tokio::time::interval;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::fmt::format::PrettyFields;
 use tracing_subscriber::layer::SubscriberExt;
@@ -32,9 +34,19 @@ async fn main() {
         .init();
 
     let shared_state = Arc::new(AppState::new());
+    let timer_state = shared_state.clone();
+
+    tokio::spawn(async move {
+        let mut timer = interval(Duration::from_secs(5));
+        loop {
+            timer.tick().await;
+            timer_state.mark_bot_offline_if_no_checkin().await;
+        }
+    });
 
     let app = Router::new()
         .route("/ws", any(routes::ws::handle))
+        .route("/bot-poll", post(routes::bot_poll::handle))
         .with_state(shared_state)
         .layer(
             TraceLayer::new_for_http().make_span_with(|request: &Request| {
