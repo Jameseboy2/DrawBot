@@ -68,7 +68,7 @@ impl AppState {
 
         if let Some(last_checkin) = *self.bot_last_checkin.lock().await {
             let secs_since_last_checking = now.duration_since(last_checkin).as_secs();
-            if secs_since_last_checking > 10 {
+            if secs_since_last_checking > 60 {
                 self.set_bot_status(BotStatus::Offline).await;
             }
         } else {
