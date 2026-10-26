@@ -1,4 +1,5 @@
-use crate::app_state::{AppState, BotStatus};
+use crate::app_state::AppState;
+use crate::app_state::bot_status::BotStatus;
 use axum::extract::{ConnectInfo, Query, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;

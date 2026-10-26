@@ -1,4 +1,5 @@
-use crate::app_state::{AppState, BotStatus};
+use crate::app_state::AppState;
+use crate::app_state::bot_status::BotStatus;
 use axum::extract::State;
 use axum::extract::connect_info::ConnectInfo;
 use axum::extract::ws::{Message, Utf8Bytes, WebSocket, WebSocketUpgrade};
@@ -56,7 +57,12 @@ async fn handle_socket(socket: WebSocket, app_state: Arc<AppState>) -> Result<()
     let mut sender = AppSender::new(raw_sender);
     let mut receiver = AppReceiver::new(raw_receiver);
 
-    let mut rx_bot_status = app_state.tx_bot_status.subscribe();
+    let mut rx_bot_status = app_state
+        .bot_status_manager()
+        .lock()
+        .await
+        .tx_bot_status
+        .subscribe();
 
     sender
         .send(OutgoingMessage::UpdateBotStatus(

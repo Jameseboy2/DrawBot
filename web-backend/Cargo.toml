@@ -7,9 +7,10 @@ edition = "2024"
 all = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 unwrap_used = "deny"
+new_without_default = "allow"
 
 [dependencies]
-axum = { version = "0.8.9", features = ["ws", "macros"] }
+axum = { version = "0.8.9", features = ["macros", "multipart", "ws"] }
 tokio = { version = "1.53.3", features = ["macros", "rt-multi-thread"] }
 headers = "0.4.2"
 axum-extra = { version = "0.12.6", features = ["typed-header"] }
@@ -21,3 +22,4 @@ tracing = "0.1.44"
 tracing-subscriber = "0.3.23"
 tracing-appender = "0.2.5"
 tower-http = { version = "0.7.1", features = ["trace"] }
+bytes = "1.12.1"

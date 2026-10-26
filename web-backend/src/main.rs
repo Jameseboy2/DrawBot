@@ -46,6 +46,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/ws", any(routes::ws::handle))
+        .route("/upload-image", post(routes::upload_image::handle))
         .route("/bot-poll", post(routes::bot_poll::handle))
         .with_state(shared_state)
         .layer(
