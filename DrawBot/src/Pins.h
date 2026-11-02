@@ -1,4 +1,3 @@
-// ReSharper disable All
 #pragma once
 #include <Arduino.h>
 

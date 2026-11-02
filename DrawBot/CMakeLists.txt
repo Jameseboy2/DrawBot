@@ -9,8 +9,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(USER_HOME $ENV{HOME})
 
 include_directories(
-        "${USER_HOME}/.arduino15/packages/arduino/hardware/avr/1.8.8/cores/arduino"
-        "${USER_HOME}/.arduino15/packages/arduino/hardware/avr/1.8.8/variants/standard"
+        "${USER_HOME}/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/cores/esp8266"
+        "${USER_HOME}/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/variants/nodemcu"
 )
 
 # Tell CLion to index all source and header files in your project
