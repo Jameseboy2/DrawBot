@@ -46,7 +46,7 @@ pub fn vectorize_image(image_bytes: &impl ToInputArray) -> Result<String> {
         &mut gray,
         imgproc::COLOR_BGR2GRAY,
         0,
-        opencv::core::AlgorithmHint::default(),
+        opencv::core::AlgorithmHint::ALGO_HINT_DEFAULT,
     )?;
     #[cfg(not(feature = "server"))]
     imgproc::cvt_color(&img, &mut gray, imgproc::COLOR_BGR2GRAY, 0)?;
@@ -64,7 +64,7 @@ pub fn vectorize_image(image_bytes: &impl ToInputArray) -> Result<String> {
         0.0,
         0.0,
         opencv::core::BORDER_DEFAULT,
-        opencv::core::AlgorithmHint::default(),
+        opencv::core::AlgorithmHint::ALGO_HINT_DEFAULT,
     )?;
     #[cfg(not(feature = "server"))]
     imgproc::gaussian_blur(
