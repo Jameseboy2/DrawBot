@@ -3,6 +3,10 @@ name = "draw-bot-web-backend"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+# Enable this when building on the server to activate the code paths for the other version of opencv.
+server = []
+
 [lints.clippy]
 all = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }

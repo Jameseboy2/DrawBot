@@ -7,6 +7,15 @@ use opencv::{
     ximgproc,
 };
 
+#[cfg(feature = "server")]
+use opencv::geometry::approx_poly_dp;
+#[cfg(feature = "server")]
+use opencv::geometry::arc_length;
+#[cfg(not(feature = "server"))]
+use opencv::imgproc::approx_poly_dp;
+#[cfg(not(feature = "server"))]
+use opencv::imgproc::arc_length;
+
 // Controls the strength of the image blurring, which mostly reduces the level of detail the robot
 // will try to draw. Must be an odd number. Values above 9 start to drop important details.
 const BLUR_STRENGTH: i32 = 9;
@@ -31,6 +40,15 @@ pub fn vectorize_image(image_bytes: &impl ToInputArray) -> Result<String> {
 
     // Convert to grayscale.
     let mut gray = Mat::default();
+    #[cfg(feature = "server")]
+    imgproc::cvt_color(
+        &img,
+        &mut gray,
+        imgproc::COLOR_BGR2GRAY,
+        0,
+        opencv::core::AlgorithmHint::default(),
+    )?;
+    #[cfg(not(feature = "server"))]
     imgproc::cvt_color(&img, &mut gray, imgproc::COLOR_BGR2GRAY, 0)?;
 
     let size = gray.size()?;
@@ -38,6 +56,17 @@ pub fn vectorize_image(image_bytes: &impl ToInputArray) -> Result<String> {
     let height = size.height;
 
     let mut blurred = Mat::default();
+    #[cfg(feature = "server")]
+    imgproc::gaussian_blur(
+        &gray,
+        &mut blurred,
+        Size::new(BLUR_STRENGTH, BLUR_STRENGTH),
+        0.0,
+        0.0,
+        opencv::core::BORDER_DEFAULT,
+        opencv::core::AlgorithmHint::default(),
+    )?;
+    #[cfg(not(feature = "server"))]
     imgproc::gaussian_blur(
         &gray,
         &mut blurred,
@@ -62,7 +91,7 @@ pub fn vectorize_image(image_bytes: &impl ToInputArray) -> Result<String> {
 
     for contour in raw_contours {
         // Filter out tiny noise contours based on arc length (perimeter).
-        let perimeter = imgproc::arc_length(&contour, true)?;
+        let perimeter = arc_length(&contour, true)?;
         if perimeter < MIN_ARC_PERIMETER {
             continue;
         }
@@ -70,7 +99,7 @@ pub fn vectorize_image(image_bytes: &impl ToInputArray) -> Result<String> {
         // Apply Douglas-Peucker approximation to smooth the curve.
         let epsilon = SMOOTHING_EPSILON * perimeter;
         let mut approx = Vector::<Point>::new();
-        imgproc::approx_poly_dp(&contour, &mut approx, epsilon, true)?;
+        approx_poly_dp(&contour, &mut approx, epsilon, true)?;
 
         if !approx.is_empty() {
             smoothed_contours.push(approx);
