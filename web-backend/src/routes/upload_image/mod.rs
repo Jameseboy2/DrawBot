@@ -1,3 +1,5 @@
+pub mod vectorize;
+
 use crate::app_state::bot_status::BotStatus;
 use crate::app_state::{AppState, PendingJob};
 use axum::extract::multipart::MultipartError;
@@ -32,7 +34,6 @@ pub async fn handle(
         return (StatusCode::BAD_REQUEST, "Bot unavailable".to_owned());
     }
 
-    // TODO: Validate (and handle) the image format/file type
     let image_data = match extract_image_data(multipart).await {
         Ok(data) => data,
         Err(ExtractImageDataError::MultipartError(err)) => {
@@ -47,26 +48,32 @@ pub async fn handle(
         }
     };
 
-    // TODO: Process the image into vectors before adding it as a pending job
-    app_state
-        .add_pending_job(PendingJob(format!("{image_data:?}")))
-        .await;
-
-    match initial_bot_status {
-        BotStatus::Available => bot_status_manager.set_status(BotStatus::JobPending),
-        BotStatus::AwaitingReset => {
-            bot_status_manager.set_status(BotStatus::AwaitingResetWithJobPending);
+    match vectorize::vectorize_image(&&*image_data) {
+        Err(error) => {
+            let error_message = format!("Failed to vectorize image: {}", error.message);
+            tracing::error!(error_message);
+            (StatusCode::INTERNAL_SERVER_ERROR, error_message)
         }
-        _ => {
-            tracing::error!(
-                "Unexpected bot status after adding pending job: {:?}",
-                bot_status_manager.status()
-            );
+        Ok(command_string) => {
+            app_state.add_pending_job(PendingJob(command_string)).await;
+
+            match initial_bot_status {
+                BotStatus::Available => bot_status_manager.set_status(BotStatus::JobPending),
+                BotStatus::AwaitingReset => {
+                    bot_status_manager.set_status(BotStatus::AwaitingResetWithJobPending);
+                }
+                _ => {
+                    tracing::error!(
+                        "Unexpected bot status after adding pending job: {:?}",
+                        bot_status_manager.status()
+                    );
+                }
+            }
+            drop(bot_status_manager);
+
+            (StatusCode::CREATED, "Pending job created".to_owned())
         }
     }
-    drop(bot_status_manager);
-
-    (StatusCode::CREATED, "Pending job created".to_owned())
 }
 
 enum ExtractImageDataError {

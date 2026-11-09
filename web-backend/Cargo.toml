@@ -23,3 +23,4 @@ tracing-subscriber = "0.3.23"
 tracing-appender = "0.2.5"
 tower-http = { version = "0.7.1", features = ["trace"] }
 bytes = "1.12.1"
+opencv = "0.102.0"
