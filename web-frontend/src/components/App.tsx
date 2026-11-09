@@ -15,7 +15,11 @@ export default function App() {
 
     return (
         <div>
-            <Typography variant="h3" className="center">
+            <Typography
+                variant="h3"
+                className="center"
+                style={{ paddingTop: '10px' }}
+            >
                 DrawBot
             </Typography>
             <br />
