@@ -46,8 +46,8 @@ async fn main() {
 
     let app = Router::new()
         .route("/ws", any(routes::ws::handle))
-        .route("/upload-image", post(routes::upload_image::handle))
-        .route("/bot-poll", post(routes::bot_poll::handle))
+        .route("/api/upload-image", post(routes::upload_image::handle))
+        .route("/api/bot-poll", post(routes::bot_poll::handle))
         .with_state(shared_state)
         .layer(
             TraceLayer::new_for_http().make_span_with(|request: &Request| {
@@ -62,6 +62,9 @@ async fn main() {
             }),
         );
 
+    #[cfg(feature = "server")]
+    let listener = TcpListener::bind("127.0.0.1:3000").await.unwrap();
+    #[cfg(not(feature = "server"))]
     let listener = TcpListener::bind("127.0.0.1:3000").await.unwrap();
     axum::serve(
         listener,
