@@ -62,9 +62,6 @@ async fn main() {
             }),
         );
 
-    #[cfg(feature = "server")]
-    let listener = TcpListener::bind("127.0.0.1:3000").await.unwrap();
-    #[cfg(not(feature = "server"))]
     let listener = TcpListener::bind("127.0.0.1:3000").await.unwrap();
     axum::serve(
         listener,
