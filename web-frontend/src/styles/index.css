@@ -1,11 +1,13 @@
 :root {
-    --error-red: #B00;
+    --error-red: #b00;
 }
 
 #root,
 body,
 html {
     height: 100%;
+    margin: 0;
+    padding: 0;
 }
 
 .center {
