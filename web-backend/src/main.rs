@@ -54,7 +54,9 @@ async fn main() {
                 let request_id = Uuid::new_v4().to_string();
                 let request_method = request.method();
                 let request_uri = request.uri();
-                tracing::info!("Received request: {request_method} {request_uri}");
+                tracing::info!(
+                    "Received request: {request_method} {request_uri} (id: {request_id})"
+                );
 
                 tracing::info_span!(
                     "request",
