@@ -1,3 +1,11 @@
+This module requires a `secrets.h` file in `src`. It should look like this:
+
+```c++
+#pragma once
+constexpr auto ssid = "<wifi network name>";
+constexpr auto password = "<wifi password>";
+```
+
 You can build and flash with arduino-cli.
 
 Set up arduino-cli for the esp8266 core:
@@ -16,5 +24,5 @@ arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2
 Flash (will probably need adjustment if not on Linux):
 
 ```bash
-arduino-cli upload -p /dev/ttyACM0 --fqbn esp8266:esp8266:nodemcuv2
+arduino-cli upload -p /dev/ttyACM0 --fqbn esp8266:esp8266:nodemcu
 ```
