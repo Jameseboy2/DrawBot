@@ -1,6 +1,7 @@
 use crate::app_state::AppState;
 use crate::app_state::bot_status::BotStatus;
-use axum::extract::{ConnectInfo, Query, State};
+use axum::Json;
+use axum::extract::{ConnectInfo, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum_extra::TypedHeader;
@@ -16,7 +17,7 @@ pub enum StatusArg {
 }
 
 #[derive(Deserialize)]
-pub struct Args {
+pub struct PostBody {
     status: StatusArg,
 }
 
@@ -24,7 +25,7 @@ pub async fn handle(
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     State(app_state): State<Arc<AppState>>,
-    Query(args): Query<Args>,
+    Json(body): Json<PostBody>,
 ) -> impl IntoResponse {
     let user_agent = if let Some(TypedHeader(user_agent)) = user_agent {
         user_agent.to_string()
@@ -32,11 +33,11 @@ pub async fn handle(
         String::from("Unknown client")
     };
     tracing::info!("Serving `{user_agent}` at {addr}.");
-    tracing::info!("Received status: {:?}", args.status);
+    tracing::info!("Received status: {:?}", body.status);
 
     app_state.register_bot_checkin().await;
 
-    match args.status {
+    match body.status {
         StatusArg::Available => {
             let pending_job = app_state.take_pending_job().await;
             (if let Some(pending_job) = pending_job {

@@ -52,12 +52,15 @@ async fn main() {
         .layer(
             TraceLayer::new_for_http().make_span_with(|request: &Request| {
                 let request_id = Uuid::new_v4().to_string();
+                let request_method = request.method();
+                let request_uri = request.uri();
+                tracing::info!("Received request: {request_method} {request_uri}");
 
                 tracing::info_span!(
                     "request",
                     id = %request_id,
-                    method = %request.method(),
-                    uri = %request.uri()
+                    method = %request_method,
+                    uri = %request_uri
                 )
             }),
         );
