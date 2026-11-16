@@ -31,6 +31,7 @@ void PositionManager::draw_straight_vector(const Point p1, const Point p2) {
 void PositionManager::move_to_point(const float target_x, const float target_y) {
     const long target_left_steps = get_left_cable_len_steps(target_x, target_y);
     const long target_right_steps = get_right_cable_len_steps(target_x, target_y);
+    Serial.printf("Moving to %f, %f (steps: %ld, %ld)\n", target_x, target_y, target_left_steps, target_right_steps);
 
     const long delta_left = target_left_steps - left_cable_steps;
     const long delta_right = target_right_steps - right_cable_steps;
@@ -69,6 +70,8 @@ void PositionManager::move_to_point(const float target_x, const float target_y) 
         if (pulse_right) digitalWrite(Pins::PUL_2, LOW);
 
         delayMicroseconds(PULSE_DELAY);
+
+        yield();
     }
 
     left_cable_steps = target_left_steps;
