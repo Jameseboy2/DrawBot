@@ -7,8 +7,8 @@
 
 PositionManager::PositionManager() {
     // Assume we're in the default starting position.
-    this->left_cable_steps = len_mm_to_steps(get_left_cable_len_mm(START_X_MM, START_Y_MM));
-    this->right_cable_steps = len_mm_to_steps(get_right_cable_len_mm(START_X_MM, START_Y_MM));
+    m_left_cable_steps = len_mm_to_steps(get_left_cable_len_mm(START_X_MM, START_Y_MM));
+    m_right_cable_steps = len_mm_to_steps(get_right_cable_len_mm(START_X_MM, START_Y_MM));
 }
 
 void PositionManager::draw_straight_vector(const Point p1, const Point p2) {
@@ -33,8 +33,8 @@ void PositionManager::move_to_point(const float target_x, const float target_y) 
     const long target_right_steps = get_right_cable_len_steps(target_x, target_y);
     Serial.printf("Moving to %f, %f (steps: %ld, %ld)\n", target_x, target_y, target_left_steps, target_right_steps);
 
-    const long delta_left = target_left_steps - left_cable_steps;
-    const long delta_right = target_right_steps - right_cable_steps;
+    const long delta_left = target_left_steps - m_left_cable_steps;
+    const long delta_right = target_right_steps - m_right_cable_steps;
 
     digitalWrite(Pins::DIR_1, delta_left >= 0 ? LEFT_LENGTHEN_DIR : !LEFT_LENGTHEN_DIR);
     digitalWrite(Pins::DIR_2, delta_right >= 0 ? RIGHT_LENGTHEN_DIR : !RIGHT_LENGTHEN_DIR);
@@ -74,8 +74,8 @@ void PositionManager::move_to_point(const float target_x, const float target_y) 
         yield();
     }
 
-    left_cable_steps = target_left_steps;
-    right_cable_steps = target_right_steps;
+    m_left_cable_steps = target_left_steps;
+    m_right_cable_steps = target_right_steps;
 }
 
 float PositionManager::get_left_cable_len_mm(const float x, const float y) {

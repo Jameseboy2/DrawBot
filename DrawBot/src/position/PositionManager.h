@@ -13,8 +13,8 @@ public:
 
 private:
     // The number of motor steps the cables are away from being fully wound.
-    long left_cable_steps;
-    long right_cable_steps;
+    long m_left_cable_steps;
+    long m_right_cable_steps;
 
 
     static float get_left_cable_len_mm(float x, float y);

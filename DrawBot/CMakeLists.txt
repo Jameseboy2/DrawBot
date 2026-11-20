@@ -25,4 +25,9 @@ file(GLOB_RECURSE SOURCES
 )
 
 add_executable(DrawBot ${SOURCES}
-        src/secrets.h)
+        src/secrets.h
+        src/state/NetworkManager.cpp
+        src/state/NetworkManager.h
+        src/state/BotState.h
+        src/state/StateManager.cpp
+        src/state/StateManager.h)
