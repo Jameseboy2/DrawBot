@@ -66,9 +66,10 @@ void main_loop() {
     }
 
     if (state_manager.get_state() == WORKING) {
-        // TODO: Run one line of the command string with position_manager.
-        //  (only do one line here so we can be relatively responsive for polling and button handling)
-        //  If there are no more lines to run, return to the home position and set bot_state to AWAITING_READY_BUTTON.
+        // TODO: Redesign this to use a timer interrupt for driving the stepper motors.
+        //  (or, if that's too much work, just run one line of the command string with position_manager here -
+        //  only do one line here so we can be relatively responsive for polling and button handling.)
+        //  When done, return to the home position and set bot_state to AWAITING_READY_BUTTON.
     }
 
     // Update the server with our status every so often.
