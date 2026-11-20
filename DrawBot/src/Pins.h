@@ -1,6 +1,8 @@
 #pragma once
 #include <Arduino.h>
 
+// Note: Caution with using D4 and D8.
+
 class Pins {
 public:
     static constexpr int EN_1 = D5;

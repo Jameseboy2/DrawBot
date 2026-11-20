@@ -4,40 +4,42 @@
 #include "position/PositionManager.h"
 #include "state/StateManager.h"
 
-volatile bool ready_button_pressed = false;
+static volatile bool ready_button_pressed = false;
 
 void main_setup() {
-    pinMode(Pins::EN_1, OUTPUT);
+    Serial.begin(115200);
+
     pinMode(Pins::DIR_1, OUTPUT);
-    pinMode(Pins::PUL_1, OUTPUT);
-    pinMode(Pins::EN_2, OUTPUT);
     pinMode(Pins::DIR_2, OUTPUT);
+    pinMode(Pins::PUL_1, OUTPUT);
     pinMode(Pins::PUL_2, OUTPUT);
+    pinMode(Pins::EN_1, OUTPUT);
+    pinMode(Pins::EN_2, OUTPUT);
 
     pinMode(Pins::READY_BUTTON, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(Pins::READY_BUTTON), handle_ready_button, FALLING);
+
     pinMode(Pins::READY_LED, OUTPUT);
-    attachInterrupt(digitalPinToInterrupt(Pins::READY_BUTTON), handle_ready_button, RISING);
+    digitalWrite(Pins::READY_LED, HIGH); // off
 
     // The drivers take at least 200ms to process the enable commands, but because we're waiting to connect to
     // the network and for the button to be pressed before doing anything, that won't be a problem.
     digitalWrite(Pins::EN_1, LOW);
     digitalWrite(Pins::EN_2, LOW);
-
-    Serial.begin(115200);
 }
 
 void main_loop() {
     static auto position_manager = PositionManager();
     static auto state_manager = StateManager();
-    static auto last_unsigned_button_press = millis();
+    static auto last_button_press = millis();
 
     // If the ready button has been pressed since the last loop (debounced), update the bot state.
     if (ready_button_pressed) {
         ready_button_pressed = false;
 
         const auto now = millis();
-        if (now - last_unsigned_button_press > 50) {
-            last_unsigned_button_press = now;
+        if (now - last_button_press > 50) {
+            last_button_press = now;
 
             if (state_manager.get_state() == AWAITING_READY_BUTTON) {
                 state_manager.set_state(READY_FOR_JOB);
@@ -59,6 +61,8 @@ void main_loop() {
         //  while reading the response to save on RAM.
         //  Test with some big/detailed images - even with stream parsing, we may need to implement
         //  command pagination if the commands are just too big.
+        //  Also, fix the poll response comparison: Make 100% sure jobs can't get re-triggered, and only run things
+        //  that look like command strings instead of blacklisting everything that's not a command string.
     }
 
     if (state_manager.get_state() == WORKING) {
@@ -73,6 +77,6 @@ void main_loop() {
     delay(1);
 }
 
-void handle_ready_button() {
+void IRAM_ATTR handle_ready_button() {
     ready_button_pressed = true;
 }

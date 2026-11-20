@@ -21,9 +21,9 @@ void StateManager::set_state(const BotState bot_state) {
     m_bot_state = bot_state;
 
     if (m_bot_state == AWAITING_READY_BUTTON) {
-        digitalWrite(Pins::READY_LED, LOW);
+        digitalWrite(Pins::READY_LED, HIGH); // off
     } else {
-        digitalWrite(Pins::READY_LED, HIGH);
+        digitalWrite(Pins::READY_LED, LOW); // on
     }
 
     poll_server();
