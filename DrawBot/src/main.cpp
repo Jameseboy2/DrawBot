@@ -41,35 +41,33 @@ void main_loop() {
         if (now - last_button_press > 50) {
             last_button_press = now;
 
-            if (state_manager.get_state() == AWAITING_READY_BUTTON) {
-                state_manager.set_state(READY_FOR_JOB);
+            if (state_manager.get_state() == BotState::AwaitingReadyButton) {
+                state_manager.set_state(BotState::ReadyForJob);
             } else {
-                // TODO: return to the home position
-                state_manager.set_state(AWAITING_READY_BUTTON);
+                // TODO: return to the home position, and don't update the state until home
+                state_manager.set_state(BotState::AwaitingReadyButton);
             }
         }
     }
 
     if (
-        state_manager.get_state() == READY_FOR_JOB
-        && state_manager.get_last_poll_response() != ""
-        && state_manager.get_last_poll_response() != "NO_PENDING_JOB"
+        state_manager.get_state() == BotState::ReadyForJob
+        // && state_manager.get_last_poll_response() != ""
+        // && state_manager.get_last_poll_response() != "NO_PENDING_JOB"
     ) {
-        state_manager.set_state(WORKING);
+        state_manager.set_state(BotState::Working);
 
-        // TODO: Decode the command string (last_poll_response). Or, ideally, parse directly from the stream
-        //  while reading the response to save on RAM.
-        //  Test with some big/detailed images - even with stream parsing, we may need to implement
-        //  command pagination if the commands are just too big.
+        // TODO: Decode the command string.
         //  Also, fix the poll response comparison: Make 100% sure jobs can't get re-triggered, and only run things
         //  that look like command strings instead of blacklisting everything that's not a command string.
     }
 
-    if (state_manager.get_state() == WORKING) {
+    if (state_manager.get_state() == BotState::Working) {
         // TODO: Redesign this to use a timer interrupt for driving the stepper motors.
         //  (or, if that's too much work, just run one line of the command string with position_manager here -
         //  only do one line here so we can be relatively responsive for polling and button handling.)
-        //  When done, return to the home position and set bot_state to AWAITING_READY_BUTTON.
+        //  Swap command pages and request a new page whenever we reach the end of the current page.
+        //  When done, return to the home position and then (once home) set bot_state to AwaitingReadyButton.
     }
 
     // Update the server with our status every so often.

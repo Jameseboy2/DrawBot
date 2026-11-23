@@ -31,4 +31,9 @@ add_executable(DrawBot ${SOURCES}
         src/state/NetworkManager.h
         src/state/BotState.h
         src/state/StateManager.cpp
-        src/state/StateManager.h)
+        src/state/StateManager.h
+        src/state/commands/CommandPage.cpp
+        src/state/commands/CommandPage.h
+        src/state/commands/MoveCommand.h
+        src/state/commands/CommandParser.cpp
+        src/state/commands/CommandParser.h)

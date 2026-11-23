@@ -7,9 +7,7 @@ class StateManager {
 public:
     StateManager();
 
-    [[nodiscard]] BotState get_state() const;
-
-    [[nodiscard]] const String &get_last_poll_response() const;
+    [[nodiscard]] BotState get_state() const { return m_bot_state; }
 
     void set_state(BotState bot_state);
 
@@ -19,7 +17,9 @@ public:
 
 private:
     BotState m_bot_state;
-    String m_last_poll_response;
     NetworkManager m_network_manager;
     unsigned long m_last_poll_time;
+
+    CommandPage command_page_a;
+    CommandPage command_page_b;
 };

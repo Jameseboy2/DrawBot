@@ -1,7 +1,8 @@
 #pragma once
+#include <cstdint>
 
-enum BotState {
-    AWAITING_READY_BUTTON,
-    READY_FOR_JOB,
-    WORKING,
+enum class BotState: uint8_t {
+    AwaitingReadyButton,
+    ReadyForJob,
+    Working,
 };
