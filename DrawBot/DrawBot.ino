@@ -1,3 +1,4 @@
+// ReSharper disable CppUseInternalLinkage
 #include "src/main.h"
 
 // This file is just the entrypoint for compilation. The setup/loop implementations are located in src/main.cpp.

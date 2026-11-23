@@ -8,7 +8,7 @@ constexpr auto password = "<wifi password>";
 
 You can build and flash with arduino-cli.
 
-Set up arduino-cli for the esp8266 core:
+Set up `arduino-cli` for the esp8266 core:
 ```bash
 arduino-cli config set board_manager.additional_urls https://arduino.esp8266.com/stable/package_esp8266com_index.json
 arduino-cli core update-index

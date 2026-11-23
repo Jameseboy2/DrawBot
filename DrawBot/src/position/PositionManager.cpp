@@ -1,6 +1,6 @@
 #include "PositionManager.h"
 
-#include <math.h>
+#include <cmath>
 
 #include "Point.h"
 #include "../Pins.h"
@@ -19,7 +19,7 @@ void PositionManager::draw_straight_vector(const Point p1, const Point p2) {
     const int segment_count = max(1, static_cast<int>(ceil(distance / SEGMENT_LENGTH_MM)));
 
     for (int i = 0; i <= segment_count; i++) {
-        const float fraction_moved = static_cast<float>(i) / segment_count;
+        const float fraction_moved = static_cast<float>(i) / static_cast<float>(segment_count);
         const float target_x = p1.x + fraction_moved * dx;
         const float target_y = p1.y + fraction_moved * dy;
 
@@ -87,14 +87,14 @@ float PositionManager::get_right_cable_len_mm(const float x, const float y) {
     return sqrt(dx * dx + y * y);
 }
 
-float PositionManager::get_left_cable_len_steps(const float x, const float y) {
+long PositionManager::get_left_cable_len_steps(const float x, const float y) {
     return len_mm_to_steps(get_left_cable_len_mm(x, y));
 }
 
-float PositionManager::get_right_cable_len_steps(const float x, const float y) {
+long PositionManager::get_right_cable_len_steps(const float x, const float y) {
     return len_mm_to_steps(get_right_cable_len_mm(x, y));
 }
 
 long PositionManager::len_mm_to_steps(const double length_mm) {
-    return round(length_mm * STEPS_PER_MM);
+    return lround(length_mm * STEPS_PER_MM);
 }

@@ -5,7 +5,7 @@
 #include "../Pins.h"
 
 StateManager::StateManager() : m_bot_state(AWAITING_READY_BUTTON), m_last_poll_time(millis()) {
-    m_network_manager.connect();
+    NetworkManager::connect();
 }
 
 BotState StateManager::get_state() const {

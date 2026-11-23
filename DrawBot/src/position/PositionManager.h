@@ -17,13 +17,13 @@ private:
     long m_right_cable_steps;
 
 
-    static float get_left_cable_len_mm(float x, float y);
+    [[nodiscard]] static float get_left_cable_len_mm(float x, float y);
 
-    static float get_right_cable_len_mm(float x, float y);
+    [[nodiscard]] static float get_right_cable_len_mm(float x, float y);
 
-    static float get_left_cable_len_steps(float x, float y);
+    [[nodiscard]] static long get_left_cable_len_steps(float x, float y);
 
-    static float get_right_cable_len_steps(float x, float y);
+    [[nodiscard]] static long get_right_cable_len_steps(float x, float y);
 
     [[nodiscard]] static long len_mm_to_steps(double length_mm);
 

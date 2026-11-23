@@ -7,9 +7,9 @@ class StateManager {
 public:
     StateManager();
 
-    BotState get_state() const;
+    [[nodiscard]] BotState get_state() const;
 
-    const String &get_last_poll_response() const;
+    [[nodiscard]] const String &get_last_poll_response() const;
 
     void set_state(BotState bot_state);
 

@@ -7,6 +7,9 @@
 
 NetworkManager::NetworkManager() {
     m_http.setReuse(true);
+    // Disable chunked encoding.
+    m_http.useHTTP10(true);
+    m_http.setTimeout(1000);
 }
 
 void NetworkManager::connect() {
@@ -26,48 +29,48 @@ void NetworkManager::post_bot_poll(const BotState bot_state, String &response) {
     }
 
     // We use HTTP instead of HTTPS because the security is irrelevant and it saves a significant amount of memory.
-    if (m_http.begin(m_client, "http://uthbees.nfshost.com/drawbot/api/bot-poll")) {
-        m_http.addHeader("Content-Type", "application/json");
-
-        Serial.print("[HTTP] Sending POST request to /bot-poll...\n");
-
-        const char *bot_state_str;
-        switch (bot_state) {
-            case AWAITING_READY_BUTTON:
-                bot_state_str = "AwaitingReset";
-                break;
-            case READY_FOR_JOB:
-                bot_state_str = "Available";
-                break;
-            case WORKING:
-                bot_state_str = "Working";
-                break;
-            default:
-                bot_state_str = "Error";
-                break;
-        }
-
-        char jsonPayload[32];
-        snprintf(jsonPayload, sizeof(jsonPayload), "{\"status\":\"%s\"}", bot_state_str);
-
-        const int httpCode = m_http.POST(jsonPayload);
-
-        // httpCode will be negative on error, or the HTTP status code on success (e.g., 200)
-        if (httpCode > 0) {
-            Serial.printf("[HTTP] POST code: %d\n", httpCode);
-
-            if (httpCode == HTTP_CODE_OK) {
-                response = m_http.getString();
-                Serial.println("--- Server Response ---");
-                Serial.println(response);
-                Serial.println("-----------------------");
-            }
-        } else {
-            Serial.printf("[HTTP] POST failed, error: %s\n", m_http.errorToString(httpCode).c_str());
-        }
-
-        m_http.end();
-    } else {
+    if (!m_http.begin(m_client, "http://uthbees.nfshost.com/drawbot/api/bot-poll")) {
         Serial.printf("[HTTP] Unable to connect to server\n");
+        return;
     }
+
+    m_http.addHeader("Content-Type", "application/json");
+    Serial.print("[HTTP] Sending POST request to /bot-poll...\n");
+
+    const char *bot_state_str;
+    switch (bot_state) {
+        case AWAITING_READY_BUTTON:
+            bot_state_str = "AwaitingReset";
+            break;
+        case READY_FOR_JOB:
+            bot_state_str = "Available";
+            break;
+        case WORKING:
+            bot_state_str = "Working";
+            break;
+        default:
+            bot_state_str = "Error";
+            break;
+    }
+
+    char json_payload[32];
+    snprintf(json_payload, sizeof(json_payload), R"({"status":"%s"})", bot_state_str);
+
+    const int response_code = m_http.POST(json_payload);
+
+    // httpCode will be negative on error, or the HTTP status code on success (e.g., 200)
+    if (response_code > 0) {
+        Serial.printf("[HTTP] POST code: %d\n", response_code);
+
+        if (response_code == HTTP_CODE_OK) {
+            response = m_http.getString();
+            Serial.println("--- Server Response ---");
+            Serial.println(response);
+            Serial.println("-----------------------");
+        }
+    } else {
+        Serial.printf("[HTTP] POST failed, error: %s\n", HTTPClient::errorToString(response_code).c_str());
+    }
+
+    m_http.end();
 }
