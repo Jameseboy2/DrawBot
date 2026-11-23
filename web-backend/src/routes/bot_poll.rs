@@ -19,6 +19,7 @@ pub enum StatusArg {
 #[derive(Deserialize)]
 pub struct PostBody {
     status: StatusArg,
+    need_page: Option<u32>,
 }
 
 pub async fn handle(
@@ -39,31 +40,85 @@ pub async fn handle(
 
     match body.status {
         StatusArg::Available => {
-            let pending_job = app_state.take_pending_job().await;
-            (if let Some(pending_job) = pending_job {
-                app_state.set_bot_status(BotStatus::Working).await;
-                pending_job.0
+            let mut bot_status_manager = app_state.bot_status_manager().lock().await;
+
+            if let Some(pending_job) = bot_status_manager.pending_job() {
+                let bot_status = bot_status_manager.status();
+                log_available_reported_with_job_pending(bot_status);
+
+                match bot_status {
+                    BotStatus::JobPending | BotStatus::AwaitingResetWithJobPending => {
+                        let first_page = pending_job
+                            .0
+                            .first()
+                            .unwrap_or(&"S1,1;END".to_owned())
+                            .clone();
+                        bot_status_manager.set_status(BotStatus::Working);
+                        first_page.into_response()
+                    }
+                    BotStatus::Offline
+                    | BotStatus::Working
+                    | BotStatus::AwaitingReset
+                    | BotStatus::Available => {
+                        bot_status_manager.clear_pending_job();
+                        bot_status_manager.set_status(BotStatus::Available);
+                        StatusCode::NO_CONTENT.into_response()
+                    }
+                }
             } else {
-                app_state.set_bot_status(BotStatus::Available).await;
-                "NO_PENDING_JOB".to_string()
-            })
-            .into_response()
+                bot_status_manager.set_status(BotStatus::Available);
+                StatusCode::NO_CONTENT.into_response()
+            }
         }
         StatusArg::Working => {
-            app_state.set_bot_status(BotStatus::Working).await;
-            StatusCode::NO_CONTENT.into_response()
+            let mut bot_status_manager = app_state.bot_status_manager().lock().await;
+            bot_status_manager.set_status(BotStatus::Working);
+
+            if let Some(need_page) = body.need_page {
+                if let Some(pending_job) = bot_status_manager.pending_job() {
+                    pending_job
+                        .0
+                        .get(need_page as usize)
+                        .unwrap_or(&"S1,1;END".to_owned())
+                        .clone()
+                        .into_response()
+                } else {
+                    tracing::error!(
+                        "Page {need_page} was requested while in working state, but no job was pending!"
+                    );
+                    StatusCode::INTERNAL_SERVER_ERROR.into_response()
+                }
+            } else {
+                StatusCode::NO_CONTENT.into_response()
+            }
         }
         StatusArg::AwaitingReset => {
-            // In theory, this should never be called when there's a pending job, but let's handle
-            // it smoothly just in case it does happen.
-            if app_state.has_pending_job().await {
-                app_state
-                    .set_bot_status(BotStatus::AwaitingResetWithJobPending)
-                    .await;
-            } else {
-                app_state.set_bot_status(BotStatus::AwaitingReset).await;
-            }
-            StatusCode::OK.into_response()
+            let mut bot_status_manager = app_state.bot_status_manager().lock().await;
+
+            bot_status_manager.clear_pending_job();
+            bot_status_manager.set_status(BotStatus::AwaitingReset);
+
+            StatusCode::NO_CONTENT.into_response()
+        }
+    }
+}
+
+fn log_available_reported_with_job_pending(bot_status: BotStatus) {
+    match bot_status {
+        BotStatus::JobPending | BotStatus::AwaitingResetWithJobPending => {}
+        BotStatus::Offline => {
+            tracing::info!("Bot restarted, clearing pending job.");
+        }
+        BotStatus::Working => {
+            tracing::warn!(
+                "Illegal status transition: Working -> Available. Clearing pending job."
+            );
+        }
+        BotStatus::Available | BotStatus::AwaitingReset => {
+            tracing::error!(
+                "Error: Had pending job with illegal status ({:?}). Clearing pending job.",
+                bot_status
+            );
         }
     }
 }

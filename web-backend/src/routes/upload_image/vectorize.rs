@@ -29,8 +29,10 @@ const SMOOTHING_EPSILON: f64 = 0.0002;
 const MIN_ARC_PERIMETER: f64 = 15.0;
 
 #[allow(clippy::missing_errors_doc)]
-pub fn vectorize_image(image_bytes: &impl ToInputArray) -> Result<String> {
+pub fn vectorize_image(image_bytes: &impl ToInputArray) -> Result<Vec<String>> {
+    tracing::debug!("Starting image vectorization.");
     let img = imgcodecs::imdecode(image_bytes, imgcodecs::IMREAD_COLOR)?;
+
     if img.empty() {
         return Err(opencv::Error::new(
             opencv::core::StsError,
@@ -76,6 +78,7 @@ pub fn vectorize_image(image_bytes: &impl ToInputArray) -> Result<String> {
         opencv::core::BORDER_DEFAULT,
     )?;
 
+    tracing::debug!("Beginning image contour processing.");
     let edges = &extract_centerline_contours(&blurred)?;
 
     let mut raw_contours = Vector::<Vector<Point>>::new();
@@ -87,6 +90,7 @@ pub fn vectorize_image(image_bytes: &impl ToInputArray) -> Result<String> {
         Point::new(0, 0),
     )?;
 
+    tracing::debug!("Smoothing image contours.");
     let mut smoothed_contours = Vector::<Vector<Point>>::new();
 
     for contour in raw_contours {
@@ -106,6 +110,8 @@ pub fn vectorize_image(image_bytes: &impl ToInputArray) -> Result<String> {
         }
     }
 
+    tracing::debug!("Optimizing image vectors for bot airtime.");
+
     let optimized_paths = optimize_travel_path(
         &smoothed_contours
             .iter()
@@ -114,7 +120,11 @@ pub fn vectorize_image(image_bytes: &impl ToInputArray) -> Result<String> {
         Point::new(0, 0),
     );
 
-    Ok(convert_to_command_string(&optimized_paths, width, height))
+    tracing::debug!("Converting vectors to paginated bot commands.");
+    let command_pages = convert_to_command_pages(&optimized_paths, width, height);
+
+    tracing::debug!("Image processing done.");
+    Ok(command_pages)
 }
 
 fn extract_centerline_contours(gray: &Mat) -> Result<Mat> {
@@ -197,23 +207,42 @@ fn distance_squared(p1: Point, p2: Point) -> f64 {
     dx * dx + dy * dy
 }
 
-/// Converts the vectorized image to a command string for the robot.
-/// Format: `W<width>;H<height>;<commands>`
+#[allow(clippy::assigning_clones)]
+/// Converts the vectorized image to a paginated command string for the robot.
+/// Format: `S<width>,<height>;<commands>;END`
 /// Commands are semicolon-separated, with two possible formats:
 /// - M<x>,<y>: Move to the specified point without drawing.
 /// - L<x>,<y>: Draw a straight line to the specified point.
-fn convert_to_command_string(paths: &[Vec<Point>], width: i32, height: i32) -> String {
-    let mut command_string = format!("W{width};H{height};");
+fn convert_to_command_pages(paths: &[Vec<Point>], width: i32, height: i32) -> Vec<String> {
+    let mut pages = Vec::new();
+    let page_header = format!("S{width},{height};");
+    let mut current_page = page_header.clone();
+    let mut page_command_count = 0;
 
     for path in paths {
         for (idx, point) in path.iter().enumerate() {
             if idx == 0 {
-                command_string.push_str(format!("M{},{};", point.x, point.y).as_str());
+                current_page.push_str(format!("M{},{};", point.x, point.y).as_str());
             } else {
-                command_string.push_str(format!("L{},{};", point.x, point.y).as_str());
+                current_page.push_str(format!("L{},{};", point.x, point.y).as_str());
+            }
+            page_command_count += 1;
+
+            if page_command_count == MAX_COMMANDS_PER_PAGE {
+                current_page.push_str("END");
+                pages.push(current_page);
+                current_page = page_header.clone();
+                page_command_count = 0;
             }
         }
     }
 
-    command_string
+    if page_command_count > 0 {
+        current_page.push_str("END");
+        pages.push(current_page);
+    }
+
+    pages
 }
+
+const MAX_COMMANDS_PER_PAGE: i32 = 256;

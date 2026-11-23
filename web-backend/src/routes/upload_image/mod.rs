@@ -54,8 +54,8 @@ pub async fn handle(
             tracing::error!(error_message);
             (StatusCode::INTERNAL_SERVER_ERROR, error_message)
         }
-        Ok(command_string) => {
-            app_state.add_pending_job(PendingJob(command_string)).await;
+        Ok(command_pages) => {
+            bot_status_manager.add_pending_job(PendingJob(command_pages));
 
             match initial_bot_status {
                 BotStatus::Available => bot_status_manager.set_status(BotStatus::JobPending),

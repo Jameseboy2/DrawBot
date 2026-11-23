@@ -79,7 +79,22 @@ async fn handle_socket(socket: WebSocket, app_state: Arc<AppState>) -> Result<()
 
             Some(message) = receiver.next() => {
                 match message? {
-                    IncomingMessage::CancelPendingJob => app_state.cancel_pending_job().await,
+                    IncomingMessage::CancelPendingJob => {
+                        let mut bot_status_manager =
+                            app_state.bot_status_manager().lock().await;
+
+                        match bot_status_manager.status() {
+                            BotStatus::JobPending => {
+                                bot_status_manager.clear_pending_job();
+                                bot_status_manager.set_status(BotStatus::Available);
+                            },
+                            BotStatus::AwaitingResetWithJobPending => {
+                                bot_status_manager.clear_pending_job();
+                                bot_status_manager.set_status(BotStatus::AwaitingReset);
+                            }
+                            _ => {}
+                        }
+                    }
                 }
             }
         }
